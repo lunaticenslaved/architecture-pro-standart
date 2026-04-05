@@ -13,13 +13,13 @@ System(OnlineBack, "Интернет-банк", "Обслуживает запр
 System(DepositSystem, "Система депозитов", "Обслуживает депозитные процессы банка")
 System(ABS, "АБС", "Автоматическая Банковская Система")
 System(Site, "Сайт", "Предоставляет общую для всех клиентов информацию по депозитам")
-System_Ext(CallCenter, "Кол-центр", "Общается с клиентами по заявкам на депозиты")
+System_Ext(CallCenter, "кол-центр", "Общается с клиентами по заявкам на депозиты")
 System_Ext(TelecomOperator, "Телеком-оператор", "Обслуживает отправки СМС")
 
 
 Rel(Client, OnlineBack, "Просматривает предложения по депозитам и отправляет заявку", "REST API")
 Rel(OnlineBack, DepositSystem, "Создаёт заявки на депозит", "REST API")
-Rel(DepositSystem, ABS, "Запрашивает данные по клиенту", "REST API")
+Rel(DepositSystem, ABS, "Предоставляет данные по клиенту", "REST API")
 Rel(DepositSystem, TelecomOperator, "Отправляет СМС-уведомления клиенту при создаини заявки", "REST API")
 
 Rel(NewClient, Site, "Отправляет заявки на депозит", "REST API")

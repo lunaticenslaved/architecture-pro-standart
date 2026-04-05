@@ -121,23 +121,25 @@
 
 ##### Синхронные (REST API):
 
-- Интернет-банк -> Deposit Service (подача заявки)
-- Deposit Service -> Rate Service (расчет ставок)
-- Rate Service -> АБС API (данные клиента)
-- Deposit Service -> АБС API (проверка счетов)
-- Система кол-центра -> Deposit Service, Rate Service (просмотр заявок и ставок)
+Интернет-банк -> Deposit Service (подача заявки)
+Deposit Service -> Rate Service (расчет ставок)
+Rate Service -> АБС API (данные клиента)
+Deposit Service -> АБС API (проверка счетов)
+Система кол-центра -> Deposit Service, Rate Service (просмотр заявок и ставок)
+
 
 ##### Асинхронные:
 
 Deposit Service -> Message Bus -> Notification Service (отправка SMS)
 
+
 #### Безопасность
 
-- HTTPS/TLS для всех внешних каналов
-- OAuth 2.0 + JWT для аутентификации через API Gateway
-- Read-Only доступ к АБС БД через API Layer
-- Изоляция данных депозитов в отдельной БД
-- Rate limiting на API Gateway
+HTTPS/TLS для всех внешних каналов
+OAuth 2.0 + JWT для аутентификации через API Gateway
+Read-Only доступ к АБС БД через API Layer
+Изоляция данных депозитов в отдельной БД
+Rate limiting на API Gateway
 
 
 #### Масштабируемость
@@ -182,6 +184,7 @@ Deposit Service -> Message Bus -> Notification Service (отправка SMS)
 - Сложность масштабирования
 - Дополнительная нагрузка на БД АБС
 
+
 ##### Вердикт
 
 Отклонено из-за риска перегрузки БД АБС
@@ -193,7 +196,7 @@ Deposit Service -> Message Bus -> Notification Service (отправка SMS)
 
 1. Дублирование данных:
 
-- Данные о заявках хранятся в Deposit Service
+- Данные о заявках хранятся
 - Открытые депозиты хранятся в АБС
 - Нужна сихронизация общих данных
 
