@@ -40,7 +40,7 @@ Rel(CallCenter, APIGateway, "Получает данные по заявкам",
 System_Boundary(ABS_Context, "АБС") {
     Container(ABSDesktopClient, "ABS Desktop Client", "Delphi")
     Container(ABSAPI, "ABS API", "Java")
-    Container(ABSDB, "ABS DB", "Oracle")
+    ContainerDb(ABSDB, "ABS DB", "Oracle")
 
     Rel(ABSDesktopClient, ABSAPI, "Получает данные клиента", "REST API")
     Rel(ABSDesktopClient, ABSDB, "Изменяет данные клиента")
