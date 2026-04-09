@@ -1,0 +1,52 @@
+@startuml Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контекста для интеграции колл-центров
+
+Person(Client, "Клиент", "Физическое лицо")
+Person(BackOffice, "Сотрудник бэк-офиса", "Обновляет ставки")
+Person(CallCenterOperator, "Оператор кол-центра", "Консультирует клиентов")
+Person_Ext(PartnerCallCenterOperator, "Оператор партнёрского кол-центра", "Консультирует клиентов")
+
+
+Rel(Client, CallCenterOperator, "Звонит в кол-центр")
+Rel(Client, PartnerCallCenterOperator, "Звонит в кол-центр")
+
+
+System_Boundary(CallCenter, "Кол-центр банка") {
+    Container(CallCenter_Frontend, "Web UI", "React.JS")
+    Container(CallCenter_Backend, "API", "Java")
+    ContainerDb(CallCenter_DB, "Database", "Postgres")
+
+    Rel(CallCenter_Frontend, CallCenter_Backend, "Запрашивает данные", "REST API")
+    Rel(CallCenter_Backend, CallCenter_DB, "Запрашивает данные")
+
+    Rel(CallCenterOperator, CallCenter_Frontend, "Просматривает актуальные ставки", "HTTPS")
+}
+
+System_Boundary(DepositSystem, "Система депозитов") {
+    Container(RateService, "Rate Service", "Java", "Управляет ставками")
+    Container(AdminUI, "Admin UI", "React SPA", "Интерфейс БО")
+    
+    ContainerDb(RateServiceDB, "Rate Service DB")
+
+    Rel(AdminUI, RateService, "Совершает операции над ставками", "REST API")
+    Rel(BackOffice, AdminUI, "Просматривает заявки на депозиты и управляет ими", "REST API")
+    Rel(RateService, RateServiceDB, "Читает и записывает данные по ставкам")
+}
+
+
+System_Boundary(PartnerCallCenter, "Партнёрский кол-центр") {
+    Container_Ext(PartnerCallCenter_UI, "Интерфейс партнёрского кол-центра", "Отображает ставки")
+    Container_Ext(PartnerCallCenter_SFTPServer, "STMP-сервер партнёра", "Хранит Excel-файл со ставками")
+
+    Rel(PartnerCallCenterOperator, PartnerCallCenter_UI, "Просматривает актуальные ставки")
+    Rel(PartnerCallCenter_UI, PartnerCallCenter_SFTPServer, "Использует Excel-файл со ставками")
+}
+
+
+Container(APIGateway, "API Gateway", "Nginx, Kong", "Аутентификация и проксирование запросов")
+Rel(CallCenter_Backend, APIGateway, "Запрашивает актуальные ставки", "REST API")
+Rel(APIGateway, RateService, "Запрашивает актуальные ставки", "REST API")
+
+Rel(RateService, PartnerCallCenter_SFTPServer, "Загружает актуалные ставки в формате Excel-файла через cron-job", "SFTP")

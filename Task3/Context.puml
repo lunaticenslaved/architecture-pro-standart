@@ -1,0 +1,31 @@
+@startuml Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Диаграмма контекста для открытия депозитов онлайн
+
+Person(Client, "Клиент", "Физическое лицо")
+Person(NewClient, "Новый клиент", "Физическое лицо без счета в банке")
+Person(BackOffice, "Сотрудник бэк-офиса (отдел депозитов)", "Обрабатывает заявки")
+Person(CallCenterOperator, "Оператор кол-центра", "Консультирует клиентов")
+
+
+System(OnlineBack, "Интернет-банк", "Обслуживает запросы клиентов")
+System(DepositSystem, "Система депозитов", "Обслуживает депозитные процессы банка")
+System(ABS, "АБС", "Автоматическая Банковская Система")
+System(Site, "Сайт", "Предоставляет общую для всех клиентов информацию по депозитам")
+System_Ext(CallCenter, "Кол-центр", "Общается с клиентами по заявкам на депозиты")
+System_Ext(TelecomOperator, "Телеком-оператор", "Обслуживает отправки СМС")
+
+
+Rel(Client, OnlineBack, "Просматривает предложения по депозитам и отправляет заявку", "REST API")
+Rel(OnlineBack, DepositSystem, "Создаёт заявки на депозит", "REST API")
+Rel(DepositSystem, ABS, "Запрашивает данные по клиенту", "REST API")
+Rel(DepositSystem, TelecomOperator, "Отправляет СМС-уведомления клиенту при создаини заявки", "REST API")
+
+Rel(NewClient, Site, "Отправляет заявки на депозит", "REST API")
+Rel(Site, DepositSystem, "Создаёт заявку от нового клиента", "REST API")
+Rel(CallCenter, DepositSystem, "Получает список новых заявок", "REST API")
+Rel(CallCenterOperator, CallCenter, "Общается с клиентам по заявкам", "REST API")
+
+Rel(BackOffice, DepositSystem, "Обрабатывает заявки на депозиты", "REST API")
+Rel(BackOffice, ABS, "Открывает депозиты в АБС", "REST API")

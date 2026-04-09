@@ -1,0 +1,36 @@
+@startuml Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Диаграмма контекста для подачи заявки на кредит онлайн
+
+Person(Client, "Клиент", "Физическое лицо")
+Person(NewClient, "Новый клиент", "Физическое лицо без счета в банке")
+Person(BackOffice, "Сотрудник бэк-офиса (отдел кредитов)", "Обрабатывает заявки")
+Person(FrontOffice, "Сотрудник фронт-офиса")
+
+System(OnlineBack, "Интернет-банк", "Обслуживает запросы клиентов")
+System(Site, "Сайт", "Предоставляет общую для всех клиентов информацию по кредитам")
+System(CreditSystem, "Система кредитов", "Обслуживает кредитные процессы банка")
+System(ABS, "АБС", "Автоматическая Банковская Система")
+System(ScoringSystem, "Система скоринга", "Автоматическая Банковская Система")
+System(CreditPipeline, "Кредитный конвейер", "Обрабатывает заявки на кредитование")
+System_Ext(TelecomOperator, "Телеком-оператор", "Обслуживает отправки СМС")
+System_Ext(CBH, "Бюро кредитных историй")
+
+Rel(Client, OnlineBack, "Просматривает предложения по кредитам и отправляет заявку", "REST API")
+Rel(OnlineBack, CreditSystem, "Создаёт заявки на кредит", "REST API")
+
+Rel(CreditSystem, TelecomOperator, "Отправляет СМС-уведомления клиенту", "REST API")
+Rel(CreditSystem, CreditPipeline, "Отправляет заявку в кредитный конвейер", "REST API")
+
+Rel(CreditPipeline, ScoringSystem, "Запрашивает результаты скоринга", "REST API")
+
+Rel(ScoringSystem, ABS, "Запрашивает данные по клиенту", "REST API")
+Rel(ScoringSystem, CBH, "Запрашивает данные по клиенту", "REST API")
+
+Rel(NewClient, Site, "Отправляет заявки на кредит", "REST API")
+Rel(Site, CreditSystem, "Создаёт заявку от нового кредит", "REST API")
+
+Rel(BackOffice, CreditSystem, "Обрабатывает заявки на кредиты")
+
+Rel(FrontOffice, ABS, "Выдаёт кредит клиенту")
