@@ -1,0 +1,77 @@
+@startuml Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контейнеров для открытия депозитов онлайн
+
+
+Person(Client, "Клиент", "Физическое лицо")
+Person(NewClient, "Новый клиент", "Физическое лицо без счета в банке")
+Person(BackOffice, "Сотрудник бэк-офиса (отдел депозитов)", "Обрабатывает заявки")
+Person(CallCenterOperator, "Оператор кол-центра", "Консультирует клиентов")
+
+System_Ext(TelecomOperator, "Телеком-оператор", "Обслуживает отправки СМС")
+System_Ext(CallCenter, "Кол-центр", "Общается с клиентами по заявкам на депозиты")
+
+System_Boundary(OnlineBank_Context, "Интернет-банк") {
+    Container(OnlineBank_Legacy, "Легаси Интернет-банк", "Монолит на ASP.NET MVC 4.5 на основе .NET Framework 4.5 и СУБД MS SQL", "Существующий функционал")
+    Container(OnlineBankNew_Frontend, "Новый Интернет-банк (фронтенд)", "React SPA", "Обслуживает функционал депозитов")
+    Container(OnlineBankNew_Backend, "BFF", "PHP", "Осуществляет запросы к API Gateway")
+
+    Rel(Client, OnlineBank_Legacy, "Использует легаси-фукнционал", "REST API")
+    Rel(Client, OnlineBankNew_Frontend, "Отправляет заявку на открытие депозита", "REST API")
+    Rel(OnlineBankNew_Frontend, OnlineBankNew_Backend, "Обогащает и проксирует заявку на открытие депозита", "REST API")
+}
+
+System_Boundary(Site_Context, "Сайт") {
+    Container(Site_Frontend, "Frontend", "React.js", "Даёт возможность просматривать список депозитов")
+    Container(Site_Backend, "BFF", "PHP", "Осуществляет запросы к API Gateway")
+
+    Rel(NewClient, Site_Frontend, "Отправляет заявку на депозит", "REST API")
+    Rel(Site_Frontend, Site_Backend, "Обогащает и проксирует заявку на открытие депозита", "REST API")
+}
+
+Container(APIGateway, "API Gateway", "Nginx, Kong", "Аутентификация и проксирование запросов")
+Rel(OnlineBankNew_Backend, APIGateway, "Проксирует заявку на открытие депозита", "REST API")
+Rel(Site_Backend, APIGateway, "Проксирует заявку на открытие депозита", "REST API")
+
+Rel(CallCenterOperator, CallCenter, "Общается с клиентам по заявкам", "REST API")
+Rel(CallCenter, APIGateway, "Получает данные по заявкам", "REST API")
+
+System_Boundary(ABS_Context, "АБС") {
+    Container(ABSDesktopClient, "ABS Desktop Client", "Delphi")
+    Container(ABSAPI, "ABS API", "Java")
+    ContainerDb(ABSDB, "ABS DB", "Oracle")
+
+    Rel(ABSDesktopClient, ABSAPI, "Получает данные клиента", "REST API")
+    Rel(ABSDesktopClient, ABSDB, "Изменяет данные клиента")
+    Rel(ABSAPI, ABSDB, "Читает данные клиента", "REST API")
+    Rel(BackOffice, ABSDesktopClient, "Открывает депозиты в АБС", "REST API")
+}
+
+System_Boundary(Deposit_System, "Система депозитов") {
+    Container(RateService, "Rate Service", "Java", "Управляет ставками")
+    Container(DepositService, "Deposit Service", "Java")
+    Container(AdminUI, "Admin UI", "React SPA", "Интерфейс БО")
+    Container(NotificationService, "Notification Service", "Java", "Отправляет уведомления")
+    Container(MessageBus, "MessageBus", "Kafka", "Обрабатывает сообщения")
+    
+    ContainerDb(RateServiceDB, "Rate Service DB")
+    ContainerDb(DepositServiceDB, "Deposit Service DB")
+
+    Rel(APIGateway, DepositService, "Создаёт заявку на депозит", "REST API")
+    Rel(APIGateway, RateService, "Считает персонифицированное предложение", "REST API")
+
+    Rel(DepositService, MessageBus, "Управляет сообщения при создании заявки и изменения ей статуса", "REST API")
+    Rel(NotificationService, MessageBus, "Читает сообщения об изменении заявки", "REST API")
+    Rel(NotificationService, TelecomOperator, "Отправляет СМС-сообщения")
+
+    Rel(AdminUI, DepositService, "Совершает операции над заявками", "REST API")
+    Rel(BackOffice, AdminUI, "Просматривает заявки на депозиты и управляет ими", "REST API")
+    Rel(RateService, RateServiceDB, "")
+    Rel(DepositService, DepositServiceDB, "")
+    Rel(DepositService, RateService, "Запрашивает данные по ставкам")
+    
+    Rel(DepositService, ABSAPI, "Получает данные по клиенту", "REST API")
+}
+
+Rel(OnlineBank_Legacy, ABSDB, "Проводит платежи и управляет счетами", "REST API")

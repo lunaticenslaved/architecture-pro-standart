@@ -1,0 +1,25 @@
+@startuml Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Диаграмма контекста для интеграции колл-центров
+
+Person(Client, "Клиент", "Физическое лицо")
+Person(BackOffice, "Сотрудник бэк-офиса", "Обновляет ставки")
+Person(CallCenterOperator, "Оператор кол-центра", "Консультирует клиентов")
+Person_Ext(PartnerCallCenterOperator, "Оператор партнёрского кол-центра", "Консультирует клиентов")
+
+System(DepositSystem, "Система депозитов", "Обслуживает депозитные процессы банка")
+System(CallCenter, "Кол-центр банка", "CRM-система банка")
+System_Ext(PartnerCallCenter, "Партнёрский кол-центр", "CRM-система партнёра")
+
+Rel(Client, CallCenterOperator, "Звонит в кол-центр")
+Rel(Client, PartnerCallCenterOperator, "Звонит в кол-центр")
+
+Rel(CallCenterOperator, CallCenter, "Просматривает актуальные ставки", "UI")
+Rel(CallCenter, DepositSystem, "Запрашивает актуальные ставки", "REST API")
+
+Rel(PartnerCallCenterOperator, PartnerCallCenter, "Просматривает актуальные ставки", "UI")
+
+Rel(DepositSystem, PartnerCallCenter, "Загружает актуалные ставки в формате Excel-файла", "SFTP")
+
+Rel(BackOffice, DepositSystem, "Обновляет ставки", "REST API")

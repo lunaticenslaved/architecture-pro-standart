@@ -1,0 +1,89 @@
+@startuml Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контекста для подачи заявки на кредит онлайн
+
+Person(Client, "Клиент", "Физическое лицо")
+Person(NewClient, "Новый клиент", "Физическое лицо без счета в банке")
+Person(BackOffice, "Сотрудник бэк-офиса (отдел кредитов)", "Обрабатывает заявки")
+
+Container(APIGateway, "API Gateway", "Nginx, Kong", "Аутентификация и проксирование запросов")
+
+
+System_Boundary(CreditPipeline, "Кредитный конвейер") {
+    Container(CreditPipelineAPI, "Credit Pipeline API", "Java", Принимает заявки на кредиты)
+    Container(CreditPipelineAdminUI, "Credit Pipeline UI", "React.JS", "Админка обработки заявок на кредиты")
+    Container(CreditPipelineCamunda, "Camunda", "Camunda", "Обработка бизнес-процессов")
+    ContainerDb(CreditPipelineDB, "Credit Pipeline DB", "React.JS")
+
+    Rel(BackOffice, CreditPipelineAdminUI, "Обрабатывает заявки на кредиты")
+    Rel(CreditPipelineAdminUI, CreditPipelineCamunda, "Управляет бизнес-процессами")
+    Rel(CreditPipelineAPI, CreditPipelineCamunda, "Управляет бизнес-процессами")
+    Rel(CreditPipelineCamunda, CreditPipelineDB, "")
+}
+
+System_Ext(TelecomOperator, "Телеком-оператор", "Обслуживает отправки СМС")
+System_Ext(CBH, "Бюро кредитных историй")
+System_Ext(Site, "Сайт", "Предоставляет общую для всех клиентов информацию по кредитам")
+System_Ext(NotificationService, "Notification Service", "Отправляет уведомления")
+
+
+System_Boundary(ABS, "АБС") {
+    Container(ABSAPI, "ABS API", "Java")
+    Container(ABSDB, "ABS DB", "Oracle")
+
+    Rel(ABSAPI, ABSDB, "Читает данные клиента", "REST API")
+    Rel(CreditPipelineCamunda, ABSAPI, "Запрашивает данные по клиенту", "REST API")
+}
+
+
+System_Boundary(ScoringSystem, "Система скоринга") {
+    Container(ScoringSystemAPI, "Scoring API", "Python")
+    ContainerDb(ScoringSystemDB, "Scoring DB", "PostgreSQL")
+    Container(ScoringSystemML, "Scoring ML")
+
+    Rel(ScoringSystemAPI, ScoringSystemDB, "Хранит результаты")
+    Rel(ScoringSystemAPI, ScoringSystemML, "Анализирует клиента")
+
+    Rel(ScoringSystemAPI, ABSAPI, "Запрашивает данные по клиенту", "REST API")
+    Rel(ScoringSystemAPI, CBH, "Запрашивает данные по клиенту", "REST API")
+
+    Rel(CreditPipelineCamunda, ScoringSystemAPI, "Запрашивает результаты скоринга", "REST API")
+}
+
+
+System_Boundary(OnlineBack, "Интернет-банк") {
+    Container(OnlineBank_Legacy, "Легаси Интернет-банк", "Монолит на ASP.NET MVC 4.5 на основе .NET Framework 4.5 и СУБД MS SQL", "Существующий функционал")
+    Container(OnlineBankNew_Frontend, "Новый Интернет-банк (фронтенд)", "React SPA", "Обслуживает функционал кредитов")
+    Container(OnlineBankNew_Backend, "BFF", "PHP", "Осуществляет запросы к API Gateway")
+
+    Rel(Client, OnlineBank_Legacy, "Использует легаси-фукнционал", "REST API")
+    Rel(Client, OnlineBankNew_Frontend, "Просматривает предложения по кредитам и отправляет заявку", "REST API")
+    Rel(OnlineBankNew_Frontend, OnlineBankNew_Backend, "Обогащает и проксирует заявку на кредит", "REST API")
+    Rel(OnlineBankNew_Backend, APIGateway, "Обогащает и проксирует заявку на кредит", "REST API")
+}
+
+
+System_Boundary(CreditSystem, "Система кредитов") {
+    Container(CreditService, "Credit Service", "Java", "Управляет заявками на кредиты")
+    Container(PreApprovalService, "Pre-Approval Service", "Java", "Сервис расчёт предодобренных предложений")
+    ContainerDb(CreditServiceDb, "База данных", "PostgreSQL")
+
+    Rel(APIGateway, CreditService, "Создаёт заявки на кредит", "REST API")
+    Rel(CreditService, NotificationService, "Отправляет СМС-уведомления клиенту", "REST API")
+    Rel(NotificationService, TelecomOperator, "Отправляет СМС-уведомления клиенту", "REST API")
+    Rel(CreditService, CreditPipelineAPI, "Отправляет заявку в кредитный конвейер", "REST API")
+    Rel(CreditService, CreditServiceDb, "")
+
+    Rel(PreApprovalService, CreditServiceDb, "")
+    Rel(PreApprovalService, ABSAPI, "Получает список клиентов", "REST API")
+    Rel(PreApprovalService, ScoringSystemAPI, "Запрашивает результаты скоринга по клиенту", "REST API")
+
+    Rel(CreditPipelineCamunda, CreditService, "Изменяет статус заявки", "REST API")
+}
+
+
+Rel(Site, APIGateway, "Обогащает и проксирует заявку на кредит", "REST API")
+
+
+
